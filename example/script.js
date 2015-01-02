@@ -1,46 +1,73 @@
 (function() {
 
-    var DummyItemView = Backbone.Marionette.ItemView.extend({
-        template: false,
-        onShow: function() {
-            this.$el.text(this.options.text);
-        }
-    });
+  var DummyItemView = Backbone.Marionette.ItemView.extend({
+    template: _.template('<div><p><button data-action="remove">X</button><span></span></p></div>'),
 
-    var Layout = Backbone.Marionette.LayoutView.extend({
-        template: false,
-        el: '#layout',
+    ui: {
+      text: 'span'
+    },
 
-        ui: {
-            input: 'input'
-        },
+    triggers: {
+      'click [data-action="remove"]': 'click:remove'
+    },
 
-        events: {
-            'click button': 'onClickButton'
-        },
+    onShow: function() {
+      this.ui.text.text(this.options.text);
+    }
 
-        regions: {
-            container: '#one-region'
-        },
+  });
 
 
 
-        onClickButton: function(event) {
-            var value = this.ui.input.val();
-            if (!value) return;
+  var Layout = Backbone.Marionette.LayoutView.extend({
+    template: false,
 
-            this._addDummyRegion(value);
-        },
+    el: '#layout',
+
+    ui: {
+      input: 'input'
+    },
+
+    events: {
+      'click [data-action="add"]':    'onClickAdd',
+      'click [data-action="clear"]':  'onClickClear'
+    },
+
+    regionClass: Backbone.Marionette.MultiRegion,
+
+    regions: {
+      container: '#one-region'
+    },
 
 
 
-        _addDummyRegion: function(text) {
-            this.container.show(new DummyItemView({text: text}));
-        }
+    onClickAdd: function(event) {
+      var value = this.ui.input.val();
+      if (!value) return;
 
-    });
+      this._addDummyRegion(value);
+    },
 
-    var layout = new Layout();
-    layout.render();
+    onClickClear: function() {
+      this.container.empty();
+    },
+
+    onDummyWantRemove: function(o) {
+      // ?? WTF
+      this.container.remove(o.view);
+    },
+
+
+
+    _addDummyRegion: function(text) {
+      var dummyView = new DummyItemView({text: text});
+      this.listenToOnce(dummyView, 'click:remove', this.onDummyWantRemove.bind(this));
+      this.container.show(dummyView);
+    }
+
+  });
+
+  var layout = new Layout();
+  layout.render();
 
 })();
