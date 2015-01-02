@@ -1,0 +1,19 @@
+{
+  "name": "marionette.multiregion",
+  "version": "0.0.0",
+  "homepage": "https://github.com/MarionetteLabs/marionette.multiregion",
+  "authors": [
+    "Jérôme Steunou <jerome.steunou+github@gmail.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "marionette": "~2.3.0"
+  }
+}

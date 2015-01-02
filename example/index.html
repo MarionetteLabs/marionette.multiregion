@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Marionette Multi Region Example</title>
+  <style>
+    body {
+      width: 800px;
+      margin: 0 auto;
+      font-family: Helvetica, Arial, sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <h1>
+    Marionette Multi Region
+  </h1>
+  <p>
+    This is an example showing an Marionette Multi Region in action.
+  </p>
+  <p>
+    To see what's happening, check out the console.
+  </p>
+  <div id="layout">
+    <div id="one-region"></div>
+    <div>
+        <label>Add a new region with text</label>
+        <input type="text" name="foo" value="" placeholder="Add a dummy region text content">
+        <button>Add</button>
+    </div>
+  </div>
+  <script src="../bower_components/jquery/dist/jquery.js"></script>
+  <script src="../bower_components/underscore/underscore.js"></script>
+  <script src="../bower_components/backbone/backbone.js"></script>
+  <script src="../bower_components/marionette/lib/backbone.marionette.js"></script>
+  <script src="../marionette.multiregion.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
