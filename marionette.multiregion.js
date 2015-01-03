@@ -167,6 +167,20 @@
       return this;
     },
 
+    // call 'destroy' or 'remove', depending on which is found
+    // on the view (if showing a raw Backbone view or a Marionette View)
+    _destroyView: function(view) {
+      if (view.destroy && !view.isDestroyed) {
+        view.destroy();
+      } else if (view.remove) {
+        view.remove();
+
+        // appending isDestroyed to raw Backbone View allows regions
+        // to throw a ViewDestroyedError for this view
+        view.isDestroyed = true;
+      }
+    },
+
     // Attach an existing view to the region. This
     // will not call `render` or `onShow` for the new view,
     // and will not replace the current HTML for the `el`
