@@ -26,40 +26,41 @@
       this._ensureViewIsIntact(view);
 
       var showOptions     = options || {};
-      // var isDifferentView = view !== this.currentView;
-      // var preventDestroy  = !!showOptions.preventDestroy;
-      // var forceShow       = !!showOptions.forceShow;
+      var isDifferentView = !this.hasView(view);
+      var preventDestroy  = !!showOptions.preventDestroy;
+      var forceShow       = !!showOptions.forceShow;
 
       // We are only changing the view if there is a current view to change to begin with
-      // var isChangingView = !!this.currentView;
+      var isChangingView = this.hasViews();
 
       // Only destroy the current view if we don't want to `preventDestroy` and if
       // the view given in the first argument is different than `currentView`
-      // var _shouldDestroyView = isDifferentView && !preventDestroy;
+      var _shouldDestroyView = isDifferentView && !preventDestroy;
 
       // Only show the view given in the first argument if it is different than
       // the current view or if we want to re-show the view. Note that if
       // `_shouldDestroyView` is true, then `_shouldShowView` is also necessarily true.
-      // var _shouldShowView = isDifferentView || forceShow;
-      var _shouldShowView = !this.hasView(view) || forceShow;
+      var _shouldShowView = isDifferentView || forceShow;
 
-      // if (isChangingView) {
-      //   this.triggerMethod('before:swapOut', this.currentView, this, options);
-      // }
+      if (isChangingView) {
+        this.triggerMethod('before:swapOut', this.currentViews, this, options);
+      }
 
-      // if (this.currentView) {
-      //   delete this.currentView._parent;
-      // }
+      this.currentViews.forEach(function(currentView) {
+        delete currentView._parent;
+      });
 
-      // if (_shouldDestroyView) {
-      //   this.empty();
+      if (_shouldDestroyView) {
+        this.empty();
 
       // A `destroy` event is attached to the clean up manually removed views.
       // We need to detach this event when a new view is going to be shown as it
       // is no longer relevant.
-      // } else if (isChangingView && _shouldShowView) {
-      //   this.currentView.off('destroy', this.empty, this);
-      // }
+      } else if (isChangingView && _shouldShowView) {
+        this.currentViews.forEach(function(currentView) {
+          currentView.off('destroy', currentView._parentRemove, this);
+        }, this);
+      }
 
       if (_shouldShowView) {
 
@@ -68,14 +69,14 @@
         // If this happens we need to remove the reference
         // to the currentView since once a view has been destroyed
         // we can not reuse it.
-        view.once('destroy', this.empty, this);
+        view.once('destroy', (view._parentRemove = _.bind(this.remove, this, view)), this);
         view.render();
 
         view._parent = this;
 
-        // if (isChangingView) {
-        //   this.triggerMethod('before:swap', view, this, options);
-        // }
+        if (isChangingView) {
+          this.triggerMethod('before:swap', view, this, options);
+        }
 
         this.triggerMethod('before:show', view, this, options);
         Marionette.triggerMethodOn(view, 'before:show', view, this, options);
@@ -106,9 +107,84 @@
           this._triggerAttach(displayedViews);
         }
 
-        // if (isChangingView) {
-        //   this.triggerMethod('swap', view, this, options);
-        // }
+        if (isChangingView) {
+          this.triggerMethod('swap', view, this, options);
+        }
+
+        this.triggerMethod('show', view, this, options);
+        Marionette.triggerMethodOn(view, 'show', view, this, options);
+
+        return this;
+      }
+
+      return this;
+    },
+
+    // Add & displays a backbone view instance inside of the region.
+    // Handles calling the `render` method for you. Reads content
+    // directly from the `el` attribute. Also calls an optional
+    // `onShow` and `onDestroy` method on your view, just after showing
+    // or just before destroying the view, respectively.
+    // The `preventDestroy` option can be used to prevent a view from
+    // the old view being destroyed on show.
+    // The `forceShow` option can be used to force a view to be
+    // re-rendered if it's already shown in the region.
+    add: function(view, options){
+      if (!this._ensureElement()) {
+        return;
+      }
+
+      this._ensureViewIsIntact(view);
+
+      var showOptions     = options || {};
+      var isDifferentView = !this.hasView(view);
+      var forceShow       = !!showOptions.forceShow;
+
+      // Only show the view given in the first argument if it is different than
+      // the current view or if we want to re-show the view. Note that if
+      // `_shouldDestroyView` is true, then `_shouldShowView` is also necessarily true.
+      var _shouldShowView = isDifferentView || forceShow;
+
+      if (_shouldShowView) {
+
+        // We need to listen for if a view is destroyed
+        // in a way other than through the region.
+        // If this happens we need to remove the reference
+        // to the currentView since once a view has been destroyed
+        // we can not reuse it.
+        view.once('destroy', (view._parentRemove = _.bind(this.remove, this, view)), this);
+        view.render();
+
+        view._parent = this;
+
+        this.triggerMethod('before:show', view, this, options);
+        Marionette.triggerMethodOn(view, 'before:show', view, this, options);
+
+        // An array of views that we're about to display
+        var attachedRegion = Marionette.isNodeAttached(this.el);
+
+        // The views that we're about to attach to the document
+        // It's important that we prevent _getNestedViews from being executed unnecessarily
+        // as it's a potentially-slow method
+        var displayedViews = [];
+
+        var triggerBeforeAttach = showOptions.triggerBeforeAttach || this.triggerBeforeAttach;
+        var triggerAttach = showOptions.triggerAttach || this.triggerAttach;
+
+        if (attachedRegion && triggerBeforeAttach) {
+          displayedViews = this._displayedViews(view);
+          this._triggerAttach(displayedViews, 'before:');
+        }
+
+        // forward options to attachHtml so this one can
+        // know if the view needs to be attached before / after
+        this.attachHtml(view, options);
+        this.currentViews.push(view);
+
+        if (attachedRegion && triggerAttach) {
+          displayedViews = this._displayedViews(view);
+          this._triggerAttach(displayedViews);
+        }
 
         this.triggerMethod('show', view, this, options);
         Marionette.triggerMethodOn(view, 'show', view, this, options);

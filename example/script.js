@@ -29,6 +29,7 @@
     },
 
     events: {
+      'click [data-action="show"]':    'onClickShow',
       'click [data-action="add"]':    'onClickAdd',
       'click [data-action="clear"]':  'onClickClear'
     },
@@ -40,12 +41,12 @@
     },
 
 
+    onClickShow: function(event) {
+      this._addDummyRegion(this.ui.input.val(), 'show');
+    },
 
     onClickAdd: function(event) {
-      var value = this.ui.input.val();
-      if (!value) return;
-
-      this._addDummyRegion(value);
+      this._addDummyRegion(this.ui.input.val(), 'add');
     },
 
     onClickClear: function() {
@@ -59,10 +60,12 @@
 
 
 
-    _addDummyRegion: function(text) {
+    _addDummyRegion: function(text, method) {
+      if (!text) return;
+
       var dummyView = new DummyItemView({text: text});
       this.listenToOnce(dummyView, 'click:remove', this.onDummyWantRemove.bind(this));
-      this.container.show(dummyView);
+      this.container[method](dummyView);
     }
 
   });
