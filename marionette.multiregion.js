@@ -172,7 +172,7 @@
     // and will not replace the current HTML for the `el`
     // of the region.
     attachView: function(view) {
-      if (!_.contains(this.currentViews, view)) {
+      if (!this.hasView(view)) {
         this.currentViews.push(view);
       }
       return this;
