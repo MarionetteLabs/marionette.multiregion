@@ -232,7 +232,7 @@
       // we should not remove anything
       if (!this.hasView(view)) { return; }
 
-      view.off('destroy', this.empty, this);
+      view.off('destroy', view._parentRemove, this);
       this.triggerMethod('before:empty', view);
       this._destroyView(view);
       this.triggerMethod('empty', view);
